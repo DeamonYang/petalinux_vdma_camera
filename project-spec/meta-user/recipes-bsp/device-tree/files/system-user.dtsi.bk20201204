@@ -1,0 +1,19 @@
+/include/ "system-conf.dtsi"
+/ {
+	
+	//dmatest_1: dmatest@0 {
+	//	compatible ="xlnx,axi-dma-test-1.00.a";
+	//	dmas = <&axi_dma_1 0
+	//			&axi_dma_1 1>;
+	//	dma-names = "axidma0", "axidma1";
+	//} ;
+
+	dma_proxy{
+		compatible = "xlnx,dma_proxy";
+		dmas = <&axi_dma_1 0
+				&axi_dma_1 1>;
+		dma-names = "axidma0", "axidma1";
+	};
+
+
+};
