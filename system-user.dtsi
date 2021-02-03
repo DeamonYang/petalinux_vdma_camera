@@ -1,0 +1,391 @@
+/include/ "system-conf.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Alientek Navigator Zynq Development Board";
+	compatible = "xlnx,zynq-zc702", "xlnx,zynq-7000";
+
+	aliases {
+		ethernet0 = &gem0;
+		ethernet1 = &gem1;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		i2c2 = &i2c2;
+		serial0 = &uart0;
+		serial1 = &uart1;
+		spi0 = &qspi;
+		mmc0 = &sdhci0;
+		mmc1 = &sdhci1;
+		usb0 = &usb0;
+		gpio0 = &gpio0;
+		gpio1 = &gpio1;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		gpio-led1 {
+			label = "led1";
+			gpios = <&gpio0 54 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+
+		gpio-led2 {
+			label = "pl_led0";
+			gpios = <&gpio0 55 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+		gpio-led3 {
+			label = "pl_led1";
+			gpios = <&gpio0 56 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+		gpio-led4 {
+			label = "ps_led0";
+			gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+		gpio-led5 {
+			label = "ps_led1";
+			gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+		gpio-led6 {
+			label = "led2";
+			gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+	};
+
+	keys {
+		compatible = "gpio-keys";
+		autorepeat;
+
+		gpio-key1 {
+			label = "pl_key1";
+			gpios = <&gpio0 57 GPIO_ACTIVE_LOW>;
+			linux,code = <105>;   // Right
+			debounce-interval = <20>;  // 20ms
+		};
+
+		gpio-key2 {
+			label = "pl_key2";
+			gpios = <&gpio0 58 GPIO_ACTIVE_LOW>;
+			linux,code = <106>;   // Left
+			debounce-interval = <20>;
+		};
+
+		gpio-key3 {
+			label = "ps_key1";
+			gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
+			linux,code = <103>;   // Up
+			debounce-interval = <20>;
+		};
+
+		gpio-key4 {
+			label = "ps_key2";
+			gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
+			linux,code = <108>;   // Down
+			debounce-interval = <20>;
+		};
+
+		touch-key {
+			label = "touch_key";
+			gpios = <&gpio0 59 GPIO_ACTIVE_HIGH>;
+			linux,code = <28>;   // ENTER
+			gpio-key,wakeup;
+			debounce-interval = <20>;
+		};
+	};
+
+	beep {
+		compatible = "gpio-beeper";
+		gpios = <&gpio0 60 GPIO_ACTIVE_HIGH>;
+	};
+
+	usb_phy0: phy0@e0002000 {
+		compatible = "ulpi-phy";
+		#phy-cells = <0>;
+		reg = <0xe0002000 0x1000>;
+		view-port = <0x0170>;
+		drv-vbus;
+	};
+};
+
+&qspi {
+	u-boot,dm-pre-reloc;
+};
+
+&flash0 {
+	compatible = "w25q256";
+};
+
+&watchdog0 {
+	reset-on-timeout;		// Enable watchdog reset function
+};
+
+&PWM_0 {
+	compatible = "digilent,axi-pwm";
+	#pwm-cells = <2>;
+	clock-names = "pwm";
+	npwm = <1>;
+};
+
+&gem0 {
+	phy-handle = <&ethernet_phy>;
+	local-mac-address = [00 0a 35 00 1e 53];
+
+	ethernet_phy: ethernet-phy@1 {          /* rtl8211e */
+		reg = <0x1>;
+		device_type = "ethernet-phy";
+	};
+};
+
+&gem1 {
+	local-mac-address = [00 0a 35 00 11 55];
+	phy-reset-gpio = <&gpio0 66 GPIO_ACTIVE_LOW>;
+	phy-reset-active-low;
+};
+
+&phy0 {
+	reg = <0x19>;   /* B50610 phy address */
+};
+
+&sdhci0 {
+	u-boot,dm-pre-reloc;
+};
+
+&uart0 {
+	u-boot,dm-pre-reloc;
+};
+
+&adc {
+	status = "okay";
+
+	xlnx,channels {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		channel@0 {
+			reg = <0>;
+		};
+	};
+};
+
+&i2c0 {
+	clock-frequency = <100000>;
+
+	eeprom@50 {
+		compatible = "24c64";
+		reg = <0x50>;
+		pagesize = <32>;
+	};
+
+	rtc@51 {
+		compatible = "nxp,pcf8563";
+		reg = <0x51>;
+	};
+
+	codec: wm8960@1a {
+		compatible = "wlf,wm8960";
+		reg = <0x1a>;
+		#sound-dai-cells = <0>;
+		wlf,shared-lrclk;
+	};
+};
+
+&i2c1 {
+	clock-frequency = <100000>;
+
+	edt-ft5x06@38 {
+		compatible = "edt,edt-ft5426";
+		reg = <0x38>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <63 0x2>;
+		reset-gpio = <&gpio0 62 GPIO_ACTIVE_LOW>;
+		interrupt-gpio = <&gpio0 63 GPIO_ACTIVE_LOW>;
+	};
+
+	goodix_ts@5d {
+		compatible = "goodix,gt9xx";
+		status = "okay";
+		// reg = <0x5d>;
+		reg = <0x14>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <63 0x2>;
+		reset-gpio = <&gpio0 62 GPIO_ACTIVE_LOW>;
+		interrupt-gpio = <&gpio0 63 GPIO_ACTIVE_LOW>;
+	};
+};
+
+&i2c2 {
+	clock-frequency = <100000>;
+
+	ov5640@3c {
+		compatible = "ovti,ov5640";
+		reg = <0x3c>;
+
+		pwn-gpios = <&gpio0 64 GPIO_ACTIVE_LOW>;
+		rst-gpios = <&gpio0 65 GPIO_ACTIVE_LOW>;
+
+		status = "okay";
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			ov5640_ep: endpoint {
+				remote-endpoint = <&xlnx_vcap>;
+			};
+		};
+	};
+};
+
+&usb0 {
+	dr_mode = "otg";
+	usb-phy = <&usb_phy0>;
+};
+
+&lcd_vtc {
+	compatible = "xlnx,v-tc-5.01.a";
+};
+
+&lcd_vdma {
+	dma-ranges = <0x00000000 0x00000000 0x20000000>;	// 512MB
+};
+
+&audio_formatter {
+	xlnx,tx = <&i2s_transmitter>;
+	xlnx,rx = <&i2s_receiver>;
+	audio-codec = <&codec>;
+};
+
+&i2s_receiver {
+	xlnx,snd-pcm = <&audio_formatter>;
+};
+
+&i2s_transmitter {
+	xlnx,snd-pcm = <&audio_formatter>;
+};
+
+&amba_pl {
+	xlnx_vdmafb_lcd {
+		compatible = "xilinx,vdmafb";
+		status = "okay";
+
+		vtc = <&lcd_vtc>;
+		clocks = <&clk_wiz_0 0>;
+		clock-names = "lcd_pclk";
+		dmas = <&lcd_vdma 0>;
+		dma-names = "lcd_vdma";
+
+		pwms = <&PWM_0 0 5000000>;
+		reset-gpio = <&gpio0 61 GPIO_ACTIVE_LOW>;
+		lcdID-gpio = <&gpio1 0 0 GPIO_ACTIVE_LOW &gpio1 1 0 GPIO_ACTIVE_LOW &gpio1 2 0 GPIO_ACTIVE_LOW>;
+
+		display-timings {
+			timing_4342: timing0 {
+				clock-frequency = <9000000>;
+				hactive = <480>;
+				vactive = <272>;
+				hback-porch = <40>;
+				hfront-porch = <5>;
+				hsync-len = <1>;
+				vback-porch = <8>;
+				vfront-porch = <8>;
+				vsync-len = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+			timing_4384: timing1 {
+				clock-frequency = <31000000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <88>;
+				hfront-porch = <40>;
+				hsync-len = <48>;
+				vback-porch = <32>;
+				vfront-porch = <13>;
+				vsync-len = <3>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+			timing_7084: timing2 {
+				clock-frequency = <33300000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <46>;
+				hfront-porch = <210>;
+				hsync-len = <1>;
+				vback-porch = <23>;
+				vfront-porch = <22>;
+				vsync-len = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+			timing_7016: timing3 {
+				clock-frequency = <51200000>;
+				hactive = <1024>;
+				vactive = <600>;
+				hback-porch = <140>;
+				hfront-porch = <160>;
+				hsync-len = <20>;
+				vback-porch = <20>;
+				vfront-porch = <12>;
+				vsync-len = <3>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+			timing_1018: timing4 {
+				clock-frequency = <71100000>;
+				hactive = <1280>;
+				vactive = <800>;
+				hback-porch = <80>;
+				hfront-porch = <70>;
+				hsync-len = <10>;
+				vback-porch = <10>;
+				vfront-porch = <10>;
+				vsync-len = <3>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
+
+	xlnx_vipp {
+		compatible = "xlnx,video";
+		dmas = <&lcd_vdma 1>;
+		dma-names = "port0";
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				direction = "input";
+
+				xlnx_vcap: endpoint {
+					remote-endpoint = <&ov5640_ep>;
+				};
+			};
+		};
+	};
+};

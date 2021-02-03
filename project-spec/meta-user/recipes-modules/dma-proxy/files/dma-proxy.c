@@ -435,7 +435,7 @@ static int dma_proxy_probe(struct platform_device *pdev)
 {
 	int rc;
 
-	printk(KERN_INFO "dma_proxy module initialized\n");
+	printk(KERN_INFO "dma_proxy module initialized_txrx\n");
 
 	/* Create the transmit and receive channels.
 	 */

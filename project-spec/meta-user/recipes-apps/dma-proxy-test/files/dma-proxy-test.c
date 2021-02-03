@@ -27,6 +27,7 @@
 static struct dma_proxy_channel_interface *tx_proxy_interface_p;
 static int tx_proxy_fd;
 static int test_size; 
+int flag = 1;
 
 /* The following function is the transmit thread to allow the transmit and the
  * receive channels to be operating simultaneously. The ioctl calls are blocking
@@ -40,14 +41,18 @@ void *tx_thread(int dma_count)
  	 * buffer to a known pattern.
  	 */
 	tx_proxy_interface_p->length = test_size;
+    
+	for (i = 0; i < test_size; i++)
+    	tx_proxy_interface_p->buffer[i] = counter + i;
 
 	for (counter = 0; counter < dma_count; counter++) {
-    		for (i = 0; i < test_size; i++)
-       			tx_proxy_interface_p->buffer[i] = counter + i;
+
 
 		/* Perform the DMA transfer and the check the status after it completes
 	 	 * as the call blocks til the transfer is done.
  		 */
+		while(flag == 1);
+		flag = 0;
 		ioctl(tx_proxy_fd, 0, &dummy);
 
 		if (tx_proxy_interface_p->status != PROXY_NO_ERROR)
@@ -129,6 +134,8 @@ int main(int argc, char *argv[])
 		/* Perform a receive DMA transfer and after it finishes check the status
 		 */
 		ioctl(rx_proxy_fd, 0, &dummy);
+		if(flag == 0)
+			flag == 1;
 
 		if (rx_proxy_interface_p->status != PROXY_NO_ERROR)
 			printf("Proxy rx transfer error\n");

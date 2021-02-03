@@ -1,12 +1,12 @@
 /include/ "system-conf.dtsi"
 / {
-	dma_proxy {
-		compatible ="xlnx,dma_proxy";
-		dmas = <&axi_dma_0 0
-				&axi_dma_0 1>;
-		dma-names = "axidma0", "axidma1";
-		//dma-names = "dma_proxy_tx", "dma_proxy_rx";
-	};
+//	dma_proxy {
+//		compatible ="xlnx,dma_proxy";
+//		dmas = <&axi_dma_0 0
+//				&axi_dma_0 1>;
+//		dma-names = "axidma0", "axidma1";
+//		//dma-names = "dma_proxy_tx", "dma_proxy_rx";
+//	};
 	
 //    dmatest_0: dmatest@0 {
 //		compatible ="xlnx,axi-dma-test-1.00.a";
@@ -14,5 +14,75 @@
 //                &axi_dma_0 1>;
 //		dma-names = "axidma0", "axidma1";
 //	} ;
-    
+	xlnx_vipp {
+		compatible = "xlnx,video";
+		dmas = <&axi_vdma_0 0>;
+		dma-names = "port0";
+		status = "okay";
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				direction = "input";
+
+				xlnx_vcap: endpoint {
+					remote-endpoint = <&ov5640_ep>;
+				};
+			};
+		};
+	};
 };
+
+&i2c0 {
+	clock-frequency = <100000>;
+
+
+	ov5640@3c {
+		compatible = "ovti,ov5640";
+		reg = <0x3c>;
+		pwn-gpios = <&gpio0 64 1>;//GPIO_ACTIVE_LOW>;
+		rst-gpios = <&gpio0 65 1>;//GPIO_ACTIVE_LOW>;
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+			reg = <0>;
+
+			ov5640_ep: endpoint {
+				remote-endpoint = <&xlnx_vcap>;
+			};
+		};
+	};
+};
+&axi_vdma_0 {
+	dma-ranges = <0x00000000 0x00000000 0x20000000>;	// 512MB
+};
+
+
+
+//&amba_pl {
+//
+//	xlnx_vipp {
+//		compatible = "xlnx,video";
+//		dmas = <&axi_vdma_0 1>;
+//		dma-names = "port0";
+//		status = "okay";
+//		ports {
+//			#address-cells = <1>;
+//			#size-cells = <0>;
+//
+//			port@0 {
+//				reg = <0>;
+//				direction = "input";
+//
+//				xlnx_vcap: endpoint {
+//					remote-endpoint = <&ov5640_ep>;
+//				};
+//			};
+//		};
+//	};
+//
+//}
+
