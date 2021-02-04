@@ -14,6 +14,13 @@
 //                &axi_dma_0 1>;
 //		dma-names = "axidma0", "axidma1";
 //	} ;
+ usb_phy0: phy0 {
+    		compatible = "ulpi-phy";
+    		#phy-cells = <0>;
+    		reg = <0xe0002000 0x1000>;
+    		view-port = <0x170>;
+    		drv-vbus;
+		};
 	xlnx_vipp {
 		compatible = "xlnx,video";
 		dmas = <&axi_vdma_0 0>;
@@ -61,28 +68,9 @@
 };
 
 
+&usb0{
+	dr_mode = "host";
+        usb-phy = <&usb_phy0>;
+     	};
 
-//&amba_pl {
-//
-//	xlnx_vipp {
-//		compatible = "xlnx,video";
-//		dmas = <&axi_vdma_0 1>;
-//		dma-names = "port0";
-//		status = "okay";
-//		ports {
-//			#address-cells = <1>;
-//			#size-cells = <0>;
-//
-//			port@0 {
-//				reg = <0>;
-//				direction = "input";
-//
-//				xlnx_vcap: endpoint {
-//					remote-endpoint = <&ov5640_ep>;
-//				};
-//			};
-//		};
-//	};
-//
-//}
 
